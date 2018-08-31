@@ -1,0 +1,7 @@
+MOLECULE    ../../geom/xyzq/benzene_2.xyzq
+OPTTYPE                                 CG
+OPTCRITERIA                        DEFAULT
+GRADIENT_CALC_METHOD				NUMERICAL
+NMAXITER                               400
+GEOMOUT       ../../output/opt/benzene_2.xyz
+ENERGYOUT     ../../output/opt/benzene_2.dat

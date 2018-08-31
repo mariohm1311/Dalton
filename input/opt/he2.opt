@@ -1,0 +1,6 @@
+MOLECULE    ../../geom/prm/he2.prm
+OPTTYPE                         SD
+OPTCRITERIA              VERYTIGHT
+NMAXITER                        80
+GEOMOUT     ../../output/opt/he2.xyz
+ENERGYOUT   ../../output/opt/he2.dat

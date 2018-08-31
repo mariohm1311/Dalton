@@ -1,0 +1,8 @@
+MOLECULE    ../../geom/xyzq/hexane.xyzq
+OPTTYPE                              CG
+OPTCRITERIA                     DEFAULT
+KINETIC_CALC_METHOD				NOKINETIC
+GRADIENT_CALC_METHOD			ANALYTIC
+NMAXITER                            450
+GEOMOUT       ../../output/opt/hexane.xyz
+ENERGYOUT     ../../output/opt/hexane.dat

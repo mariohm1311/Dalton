@@ -1,0 +1,8 @@
+MOLECULE    ../../geom/xyzq/butane.xyzq
+OPTTYPE                              CG
+OPTCRITERIA                     DEFAULT
+KINETIC_CALC_METHOD				NOKINETIC
+GRADIENT_CALC_METHOD			ANALYTIC
+NMAXITER                            150
+GEOMOUT       ../../output/opt/butane.xyz
+ENERGYOUT     ../../output/opt/butane.dat

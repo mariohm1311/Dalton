@@ -1,0 +1,8 @@
+MOLECULE    ../../geom/xyzq/ethane5.xyzq
+OPTTYPE                              CG
+OPTCRITERIA                     DEFAULT
+KINETIC_CALC_METHOD				NOKINETIC
+GRADIENT_CALC_METHOD			ANALYTIC
+NMAXITER                            200
+GEOMOUT       ../../output/opt/ethane5.xyz
+ENERGYOUT     ../../output/opt/ethane5.dat

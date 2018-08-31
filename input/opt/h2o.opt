@@ -1,0 +1,6 @@
+MOLECULE    ../../geom/xyzq/h2o.xyzq
+OPTTYPE                           CG
+OPTCRITERIA                    TIGHT
+NMAXITER                          80
+GEOMOUT       ../../output/opt/h2o.xyz
+ENERGYOUT     ../../output/opt/h2o.dat
