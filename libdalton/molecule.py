@@ -509,6 +509,7 @@ class Molecule:
         
         self.e_bonded = 0.0
         self.e_nonbonded = 0.0
+        self.e_neut = 0.0
         self.e_kinetic = 0.0
         self.e_potential = 0.0
         self.e_total = 0.0
@@ -601,9 +602,10 @@ class Molecule:
         self.e_angles = energy.get_total_e_angles(self.angles)
         self.e_torsions = energy.get_total_e_torsions(self.torsions)
         self.e_outofplanes = energy.get_total_e_outofplanes(self.outofplanes)
-        self.e_vdw, self.e_elst = energy.get_total_e_nonbonded(self.atoms, self.nonints,
-                                                               self.dielectric, self.atom_tree,
-                                                               self.long_range_cutoff)
+        self.e_vdw, self.e_elst, self.e_neut = energy.get_total_e_nonbonded(
+                                                        self.atoms, self.nonints,
+                                                        self.dielectric, self.atom_tree,
+                                                        self.long_range_cutoff)
         
         self.e_boundary = energy.get_total_e_boundary(self.atoms, self.origin,
                                                       self.k_bound, self.boundary,

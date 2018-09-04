@@ -12,4 +12,4 @@ GEOMTIME                            0.0025 ps
 ENERGYTIME                          0.0010 ps
 GEOMOUT           ../../output/md/benzene_2.xyz
 ENERGYOUT         ../../output/md/benzene_2.dat
-STATUSTIME                              2.0 s
+STATUSTIME                              5.0 s

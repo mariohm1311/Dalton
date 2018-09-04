@@ -43,34 +43,64 @@ def get_e_torsion(t_ijkl, v_n, gamma, n_fold, paths):
 def get_e_outofplane(o_ijkl, v_n):
     return v_n * (1.0 + np.cos(const.DEG2RAD * (2.0 * o_ijkl - 180.0)))
 
-def get_e_vdw(r_ij, eps, ro, cutoff=0.0):
+def get_e_vdw(r_ij, eps, ro, cutoff=0.0, return_neut=False):
+    v_neut = 0.0
+    
     if cutoff == 0.0:
         r6_ij = (ro / r_ij)**6
-        return eps * (r6_ij**2 - 2.0 * r6_ij)
+        v_total = eps * (r6_ij**2 - 2.0 * r6_ij)
+         
     else:
         cutoff_rad = cutoff * ro
+        
         if r_ij >= cutoff_rad:
-            return 0.0
+            if return_neut:
+                v_shift = get_e_vdw(cutoff_rad, eps, ro, cutoff=0.0)
+                dvdr_shift = gradient.get_g_mag_vdw(cutoff_rad, eps, ro, cutoff=0.0)
+                v_neut = v_shift + dvdr_shift * (r_ij - cutoff_rad)
+            
+            v_total = 0.0
         else:
             v_r = get_e_vdw(r_ij, eps, ro, cutoff=0.0)
             v_shift = get_e_vdw(cutoff_rad, eps, ro, cutoff=0.0)
             dvdr_shift = gradient.get_g_mag_vdw(cutoff_rad, eps, ro, cutoff=0.0)
-            return v_r - v_shift - dvdr_shift * (r_ij - cutoff_rad)
+            v_neut = v_shift + dvdr_shift * (r_ij - cutoff_rad)
+            v_total = v_r - v_neut
+            
+    if return_neut:
+        return v_total, v_neut
+    
+    return v_total
 
-def get_e_elst(r_ij, q_i, q_j, dielectric, cutoff=0.0):
+def get_e_elst(r_ij, q_i, q_j, dielectric, cutoff=0.0, return_neut=False):
+    v_neut = 0.0
+    
     if q_i == 0.0 or q_j == 0.0:
-        return 0.0
+        v_total = 0.0
     
     if cutoff == 0.0:
-        return const.CEU2KCAL * q_i * q_j / (dielectric * r_ij)
+        v_total = const.CEU2KCAL * q_i * q_j / (dielectric * r_ij)
+        
     else:
         if r_ij >= cutoff:
-            return 0.0
+            if return_neut:
+                v_shift = get_e_elst(cutoff, q_i, q_j, dielectric, cutoff=0.0)
+                dvdr_shift = gradient.get_g_mag_elst(cutoff, q_i, q_j, dielectric, cutoff=0.0)
+                v_neut = v_shift + dvdr_shift * (r_ij - cutoff) 
+            
+            v_total = 0.0
         else:
             v_r = get_e_elst(r_ij, q_i, q_j, dielectric, cutoff=0.0)
             v_shift = get_e_elst(cutoff, q_i, q_j, dielectric, cutoff=0.0)
             dvdr_shift = gradient.get_g_mag_elst(cutoff, q_i, q_j, dielectric, cutoff=0.0)
-            return v_r - v_shift - dvdr_shift * (r_ij - cutoff)
+            v_neut = v_shift + dvdr_shift * (r_ij - cutoff)
+            v_total = v_r - v_neut
+    
+    if return_neut:
+        return v_total, v_neut
+    
+    return v_total
+            
 
 def get_e_boundary(coords, origin, k_bound, boundary, boundary_type, boundary_2=None):
     e_boundary = 0.0
@@ -137,7 +167,7 @@ def get_total_e_outofplanes(outofplanes):
     return e_outofplanes
 
 def get_total_e_nonbonded(atoms, nonints, dielectric, atom_tree, cutoff):
-    e_vdw, e_elst = 0.0, 0.0
+    e_vdw, e_elst, e_neut = 0.0, 0.0, [0.0, 0.0]
     vdw_cutoff = cutoff[0]
     elst_cutoff = cutoff[1]
     
@@ -167,14 +197,18 @@ def get_total_e_nonbonded(atoms, nonints, dielectric, atom_tree, cutoff):
             
             if j in nn_idx:
                 r_ij = nn_dist[nn_idx.index(j)]
-                if r_ij <= vdw_cutoff * ro:
-                    e_elst += get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric,
-                                         cutoff=elst_cutoff)
-                
                 if r_ij <= elst_cutoff:
-                    e_vdw += get_e_vdw(r_ij, eps, ro, cutoff=vdw_cutoff)
+                    d_e_elst, d_e_neut = get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric,
+                                                    cutoff=elst_cutoff, return_neut=True)
+                    e_elst += d_e_elst
+                    e_neut[1] += d_e_neut
+                
+                if r_ij <= vdw_cutoff * ro:
+                    d_e_vdw, d_e_neut = get_e_vdw(r_ij, eps, ro, cutoff=vdw_cutoff, return_neut=True)
+                    e_vdw += d_e_vdw
+                    e_neut[0] += d_e_neut
         
-    return e_vdw, e_elst
+    return e_vdw, e_elst, e_neut
 
 #def get_total_e_nonbonded(atoms, nonints, dielectric):
 #    e_vdw, e_elst = 0.0, 0.0

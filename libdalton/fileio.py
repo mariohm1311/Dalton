@@ -431,7 +431,7 @@ def get_simulation_data(sim):
         kwarg = line[0].lower()
         kwarg_val = line[1]
         kwarg_arr = line[1:]
-              
+        
         if kwarg == 'molecule':
             sim.mol = molecule.Molecule(os.path.realpath(kwarg_val))
             sim.mol.set_long_range_cutoff(const.LONGRANGECUTOFF)
