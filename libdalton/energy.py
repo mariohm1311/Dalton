@@ -198,34 +198,59 @@ def get_total_e_nonbonded(atoms, nonints, dielectric, atom_tree, cutoff):
             if j in nn_idx:
                 r_ij = nn_dist[nn_idx.index(j)]
                 if r_ij <= elst_cutoff:
-                    d_e_elst, d_e_neut = get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric,
-                                                    cutoff=elst_cutoff, return_neut=True)
+                    d_e_elst = get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric,
+                                                    cutoff=elst_cutoff, return_neut=False)
                     e_elst += d_e_elst
-                    e_neut[1] += d_e_neut
                 
                 if r_ij <= vdw_cutoff * ro:
-                    d_e_vdw, d_e_neut = get_e_vdw(r_ij, eps, ro, cutoff=vdw_cutoff, return_neut=True)
+                    d_e_vdw = get_e_vdw(r_ij, eps, ro, cutoff=vdw_cutoff, return_neut=False)
                     e_vdw += d_e_vdw
-                    e_neut[0] += d_e_neut
         
     return e_vdw, e_elst, e_neut
 
-#def get_total_e_nonbonded(atoms, nonints, dielectric):
-#    e_vdw, e_elst = 0.0, 0.0
+#def get_total_e_nonbonded(atoms, nonints, dielectric, atom_tree, cutoff):
+#    e_vdw, e_elst, e_neut = 0.0, 0.0, [0.0, 0.0]
+#    vdw_cutoff = cutoff[0]
+#    elst_cutoff = cutoff[1]
+#    
+#    search_rad = max(6.8*vdw_cutoff, elst_cutoff)
+#    dont_truncate = cutoff == (0.0, 0.0)
+#    pivot = -1
 #    
 #    for i, j in itertools.combinations(range(len(atoms)), 2):
 #        if (i, j) in nonints:
 #            continue
 #        
 #        at_1, at_2 = atoms[i], atoms[j]
-#        r_ij = geometry.get_r_ij(at_1.coords, at_2.coords)
 #        eps = at_1.at_sreps * at_2.at_sreps
 #        ro = at_1.at_ro + at_2.at_ro
 #        
-#        e_elst += get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric)
-#        e_vdw += get_e_vdw(r_ij, eps, ro)
-#    
-#    return e_vdw, e_elst
+#        if dont_truncate:
+#            r_ij = geometry.get_r_ij(at_1.coords, at_2.coords)
+#            e_elst += get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric)
+#            e_vdw += get_e_vdw(r_ij, eps, ro)
+#        else:
+#            if not i == pivot:
+#                pivot = i
+#                nn_pivot = atom_tree.query_radius(at_1.coords.reshape(1,-1), r=search_rad,
+#                                                  return_distance=True)
+#                nn_idx = nn_pivot[0][0].tolist()
+#                nn_dist = nn_pivot[1][0]
+#            
+#            if j in nn_idx:
+#                r_ij = nn_dist[nn_idx.index(j)]
+#                if r_ij <= elst_cutoff:
+#                    d_e_elst, d_e_neut = get_e_elst(r_ij, at_1.at_charge, at_2.at_charge, dielectric,
+#                                                    cutoff=elst_cutoff, return_neut=True)
+#                    e_elst += d_e_elst
+#                    e_neut[1] += d_e_neut
+#                
+#                if r_ij <= vdw_cutoff * ro:
+#                    d_e_vdw, d_e_neut = get_e_vdw(r_ij, eps, ro, cutoff=vdw_cutoff, return_neut=True)
+#                    e_vdw += d_e_vdw
+#                    e_neut[0] += d_e_neut
+#        
+#    return e_vdw, e_elst, e_neut
 
 def get_total_e_boundary(atoms, origin, k_bound, boundary, boundary_type):
     e_boundary = 0.0

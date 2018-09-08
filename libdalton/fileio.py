@@ -487,9 +487,46 @@ def get_simulation_data(sim):
             sim.eq_rate = float(kwarg_val)
         elif kwarg == 'randomseed':
             sim.random_seed = int(kwarg_val) % 2**32
+        elif kwarg == 'custom_integrator':
+            sim.custom_integ = infile_array[i:]
+            sim.custom_integ[0][1] = os.path.realpath(sim.custom_integ[0][1])
     
     os.chdir(cwd)
+
+def get_custom_integrator(integ_array):
+    cwd = os.getcwd()
+    os.chdir(os.path.dirname(integ_array[0][1]))
     
+    is_kwarg = False
+    integ_kwargs = {}
+    for i, line in enumerate(integ_array):
+        if len(line) < 1:
+            continue
+        
+        if line[0].lower() == 'integrator_params':
+            is_kwarg = True
+            continue
+        else:
+            if len(line) < 2:
+                continue
+           
+        kwarg = line[0].lower()
+        kwarg_val = line[1]
+                
+        if kwarg == 'custom_integrator':
+            module_path = os.path.realpath(kwarg_val)
+            module_dir = os.path.dirname(module_path)
+            sys.path.insert(0, module_dir)
+            integ_name = os.path.basename(module_path).split('.')[0]
+            integ_module = __import__(integ_name)
+            del sys.path[0]
+        
+        if is_kwarg:
+            integ_kwargs[kwarg] = float(kwarg_val)
+    
+    os.chdir(cwd)
+    return integ_module, integ_name, integ_kwargs
+         
 def get_analysis_data(ana):
     infile_array = get_file_str_array(ana.infile)
     cwd = os.getcwd()

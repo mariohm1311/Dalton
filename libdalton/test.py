@@ -79,7 +79,7 @@ for i in range(4):
     print(i)
 """
 
-"""
+""" 
 from multiprocessing import Pool
 from time import time
 
@@ -100,12 +100,9 @@ def run(values):
         
     return out
 
-def fun_par(vec):
-    return fun(*vec)
-
 def run_parallel(values):
     with Pool(4) as p:
-        out = p.map(fun_par, vals)
+        out = p.starmap(fun, vals)
     
     return out
 

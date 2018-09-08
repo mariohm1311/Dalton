@@ -4,7 +4,7 @@ TEMPERATURE                          298.15 K
 BOUNDARY                              21.75 A
 BOUNDARYSPRING             250.0 kcal/mol*A^2
 BOUNDARYTYPE                           SPHERE
-TOTALTIME                           1.0000 ps
+TOTALTIME                           2.0000 ps
 EQTIME						 		0.3000 ps
 EQRATE									 0.06
 TIMESTEP                            0.0001 ps

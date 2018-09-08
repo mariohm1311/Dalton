@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import os
 import sys
@@ -7,6 +5,9 @@ import time
 
 from libdalton import constants as const
 from libdalton import fileio
+
+from libdalton.integrators.Leapfrog_w_Berendsen_Thermostat import (
+        Leapfrog_w_Berendsen_Thermostat)
 
 class Simulation:
     def __init__(self, infile_name):
@@ -18,6 +19,10 @@ class Simulation:
         self.pressure = 1.0
         self.kinetic_calc_method = 'leapfrog'
         self.gradient_calc_method = 'analytic'
+        
+        self.custom_integ = False
+        self.custom_integ_name = ''
+        self.custom_integ_kwargs = {}
         
         self.out_geom = 'geom.xyz'
         self.out_energy = 'energy.dat'
@@ -37,6 +42,21 @@ class Simulation:
         self.mol.set_kinetic_calc_method(self.kinetic_calc_method)
         self.mol.set_gradient_calc_method(self.gradient_calc_method)
         self.temperature += 1.0E-20
+        
+        if not self.custom_integ == False:
+            (self.custom_integ,
+             self.custom_integ_name,
+             self.custom_integ_kwargs) = fileio.get_custom_integrator(self.custom_integ)
+            
+            integrator = getattr(self.custom_integ, self.custom_integ_name)
+                     
+            if integrator.thermostatted:
+                self.integrator = integrator(self.mol, self.temperature,
+                                             **self.custom_integ_kwargs)
+            else:
+                self.integrator = integrator(self.mol,
+                                             **self.custom_integ_kwargs)
+            
     
     def _open_output_files(self):
         if not os.path.exists(os.path.dirname(self.out_energy)):
@@ -131,6 +151,11 @@ class MolecularDynamics(Simulation):
         
         super().__init__(infile_name)
         
+        if self.custom_integ == False:
+            self.integrator = Leapfrog_w_Berendsen_Thermostat(self.mol,
+                                                              self.temperature,
+                                                              eq_rate=self.eq_rate)
+        
         if self.kinetic_calc_method == 'nokinetic':
             raise ValueError("Can't use 'nokinetic' mode for MD simulations.")
         
@@ -139,25 +164,20 @@ class MolecularDynamics(Simulation):
     
     def run(self):
         self._open_output_files()
+        
         self._initialize_vels()
         self.mol.get_energy()
         self.mol.get_gradient()
-        self._update_accs()
         self._check_print(0.0, print_all=True)
-        self._update_vels(0.5 * self.timestep)
+        
+        self.integrator.timestep = self.timestep
+        self.integrator.initialize()
         
         while self.time < self.total_time:
-            self._update_coords(self.timestep)
-            self.mol.get_gradient()
-            self._update_accs()
-            self._update_vels(self.timestep)
-            self.mol.get_energy()
+            self.integrator.step()
             
-            self.mol.get_temperature()
-            self.mol.get_pressure()
-            
-            if self.time < self.eq_time:
-                self._equilibrate_temp()
+            if self.integrator.thermostatted and self.time < self.eq_time:
+                self.integrator.run_thermostat()
             
             self._check_print(self.timestep)
             self.time += self.timestep
@@ -165,15 +185,6 @@ class MolecularDynamics(Simulation):
         self._check_print(self.timestep)
         self._close_output_files()
         
-    def _equilibrate_temp(self):
-        tscale = self.timestep / max(self.timestep, self.eq_rate)
-        tweight = 10.0 * self.timestep
-        self.etemp = (self.etemp + tweight * self.mol.temperature) / (1.0 + tweight)
-        vscale = 1.0 + tscale * (np.sqrt(self.temperature / self.etemp) - 1.0)
-        
-        for atom in self.mol.atoms:
-            atom.set_vels(atom.vels * vscale)
-    
     def _initialize_vels(self):
         if self.temperature:
             self.etemp = self.temperature
@@ -191,23 +202,7 @@ class MolecularDynamics(Simulation):
             
             for atom in self.mol.atoms:
                 atom.set_vels(atom.vels * vscale)
-    
-    def _update_coords(self, timestep):
-        for atom in self.mol.atoms:
-            atom.set_coords(atom.coords + atom.vels * timestep)
-        
-        self.mol.update_internals()
-    
-    def _update_vels(self, timestep):
-        for i, atom in enumerate(self.mol.atoms):
-            atom.set_pvels(atom.vels)
-            atom.set_vels(atom.vels + atom.accs * timestep)
-    
-    def _update_accs(self):
-        for i, atom in enumerate(self.mol.atoms):
-            atom.set_paccs(atom.accs)
-            atom.set_accs(-const.ACCCONV * self.mol.g_total[i] / atom.at_mass)
-    
+       
     def _check_print(self, timestep, print_all=False):
         if print_all or self.etime >= self.energy_time:
             self._print_energy()
@@ -250,7 +245,8 @@ class MolecularDynamics(Simulation):
         e.write('e_kin      e_pot  e_nonbond   e_bonded e_boundary      ')
         e.write('e_vdw     e_elst     e_bond    e_angle     e_tors      ')
         e.write('e_oop       temp      press\n')
-        
+
+
 class MonteCarlo(Simulation):
     def __init__(self, infile_name):
         self.sim_type = 'mc'

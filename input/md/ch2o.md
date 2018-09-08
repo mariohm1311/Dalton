@@ -12,3 +12,7 @@ ENERGYTIME                 0.0200 ps
 GEOMOUT       ../../output/md/ch2o.xyz
 ENERGYOUT     ../../output/md/ch2o.dat
 STATUSTIME                     2.0 s
+
+CUSTOM_INTEGRATOR			./custom_integrators/Leapfrog_w_Berendsen_Thermostat_Test.py
+INTEGRATOR_PARAMS
+EQ_RATE							0.6
