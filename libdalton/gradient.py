@@ -277,7 +277,6 @@ def get_all_g_nonbonded(g_vdw, g_elst, atoms, nonints, dielectric, atom_tree, cu
         eps = at_1.at_sreps * at_2.at_sreps
         ro = at_1.at_ro + at_2.at_ro
         
-        
         if dont_truncate:
             r_ij = geometry.get_r_ij(at_1.coords, at_2.coords)
             gdir_1, gdir_2 = get_g_dir_bond(at_1.coords, at_2.coords, r_ij)        
@@ -309,7 +308,7 @@ def get_all_g_nonbonded(g_vdw, g_elst, atoms, nonints, dielectric, atom_tree, cu
                     grad_vdw_mag = get_g_mag_vdw(r_ij, eps, ro, cutoff=vdw_cutoff)
                     g_vdw[i] += grad_vdw_mag * gdir_1
                     g_vdw[j] += grad_vdw_mag * gdir_2
-        
+            
 #def get_all_g_nonbonded(g_vdw, g_elst, atoms, nonints, dielectric):
 #    g_vdw.fill(0.0)
 #    g_elst.fill(0.0)

@@ -70,7 +70,6 @@ print(data_tree.query_radius(np.array([1,1]).reshape(1,-1), r=1.8)[0].tolist())
 print(data_tree.query_radius(np.array([1,1]).reshape(1,-1), r=1.8, return_distance=True)[1][0].tolist())
 """
 
-"""
 import itertools
 for i, j in itertools.combinations(range(4), 2):
     print(i,j)
@@ -116,7 +115,6 @@ if __name__ == '__main__':
     time3 = time()
     print('done in', time3-time2)
     print(vals)
-"""
 
 #import itertools
 #

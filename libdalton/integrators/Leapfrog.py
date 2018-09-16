@@ -1,4 +1,4 @@
-from libdalton.base_integrators import Base_Integrator
+from libdalton.integrators.base_integrators import Base_Integrator
 from libdalton import constants as const
 
 class Leapfrog(Base_Integrator):
